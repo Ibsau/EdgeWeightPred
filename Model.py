@@ -9,8 +9,6 @@ class GCNModel(nn.Module):
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
         self.gcn1 = GCNConv(input_dim, hidden_dim)
         self.gcn2 = GCNConv(hidden_dim, hidden_dim)
         self.fc = nn.Linear(hidden_dim, 1)  # Output single value
@@ -19,8 +17,6 @@ class GCNModel(nn.Module):
         x_out = self.gcn1(x, edge_index, edge_weight)
         x_out = self.gcn2(x_out, edge_index, edge_weight)
         x_out = self.fc(x_out)
-        x_out = torch.clamp(x_out, min=0, max=self.output_dim)
-        x_out = torch.round(x_out) 
-
+        # Use sigmoid activation to smoothly constrain the output to [0, 10]
+        x_out = torch.sigmoid(x_out) * self.output_dim
         return x_out
-        
